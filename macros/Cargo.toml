@@ -1,0 +1,17 @@
+[package]
+name = "test-context-macros"
+version = "0.1.0"
+edition = "2018"
+description = "Macro crate for test-context"
+homepage = "https://github.com/markhildreth/test-context"
+repository = "https://github.com/markhildreth/test-context"
+authors = ["Mark Hildreth <mark.k.hildreth@gmail.com>"]
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0.3"
+syn = { version = "^1", features = ["full"] }
