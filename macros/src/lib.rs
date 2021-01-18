@@ -48,8 +48,11 @@ pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
                     ).catch_unwind().await
                 }.await;
                 <#context_type as test_context::AsyncTestContext>::teardown(ctx).await;
-                if let Err(err) = result {
-                    std::panic::resume_unwind(err);
+                match result {
+                    Ok(returned_value) => returned_value,
+                    Err(err) => {
+                        std::panic::resume_unwind(err);
+                    }
                 }
             }
         }
@@ -59,11 +62,14 @@ pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
                 let mut ctx = <#context_type as test_context::TestContext>::setup();
                 let mut wrapper = std::panic::AssertUnwindSafe(&mut ctx);
                 let result = std::panic::catch_unwind(move || {
-                    #wrapped_name(*wrapper);
+                    #wrapped_name(*wrapper)
                 });
                 <#context_type as test_context::TestContext>::teardown(ctx);
-                if let Err(err) = result {
-                    std::panic::resume_unwind(err);
+                match result {
+                    Ok(returned_value) => returned_value,
+                    Err(err) => {
+                        std::panic::resume_unwind(err);
+                    }
                 }
             }
         }
