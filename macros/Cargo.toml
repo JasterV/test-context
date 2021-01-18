@@ -1,6 +1,6 @@
 [package]
 name = "test-context-macros"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2018"
 description = "Macro crate for test-context"
 homepage = "https://github.com/markhildreth/test-context"
