@@ -44,7 +44,7 @@ impl AsyncTestContext for MyAsyncContext {
     }
 
     async fn teardown(self) {
-        // Perform any teradown you wish.
+        // Perform any teardown you wish.
     }
 }
 
@@ -54,3 +54,5 @@ async fn test_works(ctx: &mut MyAsyncContext) {
     assert_eq!(ctx.value, "Hello, World!");
 }
 ```
+
+License: MIT

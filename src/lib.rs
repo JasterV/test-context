@@ -42,7 +42,7 @@
 //!     }
 //!
 //!     async fn teardown(self) {
-//!         // Perform any teradown you wish.
+//!         // Perform any teardown you wish.
 //!     }
 //! }
 //!
