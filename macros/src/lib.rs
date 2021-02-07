@@ -39,7 +39,7 @@ pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
     let outer_body = if is_async {
         quote! {
             {
-                use futures::FutureExt;
+                use test_context::futures::FutureExt;
                 let mut ctx = <#context_type as test_context::AsyncTestContext>::setup().await;
                 let wrapped_ctx = &mut ctx;
                 let result = async move {

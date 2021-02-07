@@ -53,6 +53,9 @@
 //! }
 //! ```
 
+// Reimported to allow for use in the macro.
+pub use futures;
+
 pub use test_context_macros::test_context;
 
 /// The trait to implement to get setup/teardown functionality for tests.
