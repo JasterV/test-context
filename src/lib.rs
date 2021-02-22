@@ -84,3 +84,18 @@ where
     /// normal "drop" semantics.
     async fn teardown(self) {}
 }
+
+// Automatically impl TestContext for anything Send that impls AsyncTestContext.
+//
+// A future improvement may be to use feature flags to enable using a specific runtime
+// to run the future synchronously. This is the easiest way to implement it, though, and
+// introduces no new dependencies.
+impl<T> TestContext for T where T: AsyncTestContext + Send {
+    fn setup() -> Self {
+        futures::executor::block_on(<T as AsyncTestContext>::setup())
+    }
+
+    fn teardown(self) {
+        futures::executor::block_on(<T as AsyncTestContext>::teardown(self))
+    }
+}
