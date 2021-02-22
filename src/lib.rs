@@ -90,7 +90,10 @@ where
 // A future improvement may be to use feature flags to enable using a specific runtime
 // to run the future synchronously. This is the easiest way to implement it, though, and
 // introduces no new dependencies.
-impl<T> TestContext for T where T: AsyncTestContext + Send {
+impl<T> TestContext for T
+where
+    T: AsyncTestContext + Send,
+{
     fn setup() -> Self {
         futures::executor::block_on(<T as AsyncTestContext>::setup())
     }
