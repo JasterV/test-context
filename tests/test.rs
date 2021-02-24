@@ -94,3 +94,9 @@ async fn async_return_value_func(ctx: &mut AsyncContext) -> u32 {
 async fn async_includes_return_value() {
     assert_eq!(async_return_value_func().await, 1);
 }
+
+#[test_context(AsyncContext)]
+#[test]
+fn async_auto_impls_sync(ctx: &mut AsyncContext) {
+    assert_eq!(ctx.n, 1);
+}
