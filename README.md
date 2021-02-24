@@ -31,9 +31,8 @@ fn test_works(ctx: &mut MyContext) {
 }
 ```
 
-Works with other test wrappers like [`actix_rt::test`](https://docs.rs/actix-rt/1.1.1/actix_rt/attr.test.html) or
-[`tokio::test`](https://docs.rs/tokio/1.0.2/tokio/attr.test.html) that turn your test function into an async
-function.
+Alternatively, you can use `async` functions in your test context by using the
+`AsyncTestContext`.
 
 ```rust
 use test_context::{test_context, AsyncTestContext};
@@ -53,6 +52,17 @@ impl AsyncTestContext for MyAsyncContext {
     }
 }
 
+#[test_context(MyAsyncContext)]
+fn test_works(ctx: &mut MyAsyncContext) {
+    assert_eq!(ctx.value, "Hello, World!");
+}
+```
+
+The `AsyncTestContext` works well with async test wrappers like
+[`actix_rt::test`](https://docs.rs/actix-rt/1.1.1/actix_rt/attr.test.html) or
+[`tokio::test`](https://docs.rs/tokio/1.0.2/tokio/attr.test.html).
+
+```rust
 #[test_context(MyAsyncContext)]
 #[tokio::test]
 async fn test_works(ctx: &mut MyAsyncContext) {

@@ -24,9 +24,8 @@
 //! }
 //! ```
 //!
-//! Works with other test wrappers like [`actix_rt::test`](https://docs.rs/actix-rt/1.1.1/actix_rt/attr.test.html) or
-//! [`tokio::test`](https://docs.rs/tokio/1.0.2/tokio/attr.test.html) that turn your test function into an async
-//! function.
+//! Alternatively, you can use `async` functions in your test context by using the
+//! `AsyncTestContext`.
 //!
 //! ```
 //! use test_context::{test_context, AsyncTestContext};
@@ -47,8 +46,32 @@
 //! }
 //!
 //! #[test_context(MyAsyncContext)]
+//! fn test_works(ctx: &mut MyAsyncContext) {
+//!     assert_eq!(ctx.value, "Hello, World!");
+//! }
+//! ```
+//!
+//! The `AsyncTestContext` works well with async test wrappers like
+//! [`actix_rt::test`](https://docs.rs/actix-rt/1.1.1/actix_rt/attr.test.html) or
+//! [`tokio::test`](https://docs.rs/tokio/1.0.2/tokio/attr.test.html).
+//!
+//! ```
+//! # use test_context::{test_context, AsyncTestContext};
+//! # struct MyAsyncContext {
+//! #     value: String
+//! # }
+//! # #[async_trait::async_trait]
+//! # impl AsyncTestContext for MyAsyncContext {
+//! #     async fn setup() -> MyAsyncContext {
+//! #         MyAsyncContext { value: "Hello, world!".to_string() }
+//! #     }
+//! #     async fn teardown(self) {
+//! #         // Perform any teardown you wish.
+//! #     }
+//! # }
+//! #[test_context(MyAsyncContext)]
 //! #[tokio::test]
-//! async fn test_works(ctx: &mut MyAsyncContext) {
+//! async fn test_async_works(ctx: &mut MyAsyncContext) {
 //!     assert_eq!(ctx.value, "Hello, World!");
 //! }
 //! ```
