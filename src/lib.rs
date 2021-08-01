@@ -12,7 +12,7 @@
 //!         MyContext {  value: "Hello, world!".to_string() }
 //!     }
 //!
-//!     fn teardown(self) {
+//!     fn teardown(&mut self) {
 //!         // Perform any teardown you wish.
 //!     }
 //! }
@@ -40,7 +40,7 @@
 //!         MyAsyncContext { value: "Hello, world!".to_string() }
 //!     }
 //!
-//!     async fn teardown(self) {
+//!     async fn teardown(&mut self) {
 //!         // Perform any teardown you wish.
 //!     }
 //! }
@@ -65,7 +65,7 @@
 //! #     async fn setup() -> MyAsyncContext {
 //! #         MyAsyncContext { value: "Hello, world!".to_string() }
 //! #     }
-//! #     async fn teardown(self) {
+//! #     async fn teardown(&mut self) {
 //! #         // Perform any teardown you wish.
 //! #     }
 //! # }
@@ -91,7 +91,7 @@ where
 
     /// Perform any additional cleanup of the context besides that already provided by
     /// normal "drop" semantics.
-    fn teardown(self) {}
+    fn teardown(&mut self) {}
 }
 
 /// The trait to implement to get setup/teardown functionality for async tests.
@@ -105,7 +105,7 @@ where
 
     /// Perform any additional cleanup of the context besides that already provided by
     /// normal "drop" semantics.
-    async fn teardown(self) {}
+    async fn teardown(&mut self) {}
 }
 
 // Automatically impl TestContext for anything Send that impls AsyncTestContext.
@@ -121,7 +121,7 @@ where
         futures::executor::block_on(<T as AsyncTestContext>::setup())
     }
 
-    fn teardown(self) {
+    fn teardown(&mut self) {
         futures::executor::block_on(<T as AsyncTestContext>::teardown(self))
     }
 }

@@ -9,7 +9,7 @@ impl TestContext for Context {
         Self { n: 1 }
     }
 
-    fn teardown(self) {
+    fn teardown(&mut self) {
         if self.n != 1 {
             panic!("Number changed");
         }
@@ -57,7 +57,7 @@ impl AsyncTestContext for AsyncContext {
         Self { n: 1 }
     }
 
-    async fn teardown(self) {
+    async fn teardown(&mut self) {
         if self.n != 1 {
             panic!("Number changed");
         }

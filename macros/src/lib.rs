@@ -47,7 +47,7 @@ pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
                         #wrapped_name(wrapped_ctx)
                     ).catch_unwind().await
                 }.await;
-                <#context_type as test_context::AsyncTestContext>::teardown(ctx).await;
+                <#context_type as test_context::AsyncTestContext>::teardown(&mut ctx).await;
                 match result {
                     Ok(returned_value) => returned_value,
                     Err(err) => {
@@ -64,7 +64,7 @@ pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
                 let result = std::panic::catch_unwind(move || {
                     #wrapped_name(*wrapper)
                 });
-                <#context_type as test_context::TestContext>::teardown(ctx);
+                <#context_type as test_context::TestContext>::teardown(&mut ctx);
                 match result {
                     Ok(returned_value) => returned_value,
                     Err(err) => {
