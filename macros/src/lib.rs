@@ -30,6 +30,7 @@ pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let ret = &input.sig.output;
     let name = &input.sig.ident;
+    let arguments = &input.sig.inputs;
     let inner_body = &input.block;
     let attrs = &input.attrs;
     let is_async = input.sig.asyncness.is_some();
@@ -85,7 +86,7 @@ pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
         #(#attrs)*
         #async_tag fn #name() #ret #outer_body
 
-        #async_tag fn #wrapped_name(ctx: &mut #context_type) #ret #inner_body
+        #async_tag fn #wrapped_name(#arguments) #ret #inner_body
     };
     result.into()
 }

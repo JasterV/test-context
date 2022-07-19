@@ -25,7 +25,7 @@ fn test_sync_setup(ctx: &mut Context) {
 #[test_context(Context)]
 #[test]
 #[should_panic(expected = "Number changed")]
-fn test_sync_teardown(ctx: &mut Wrapper) {
+fn test_sync_teardown(ctx: &mut Context) {
     ctx.n = 2;
 }
 
@@ -99,4 +99,16 @@ async fn async_includes_return_value() {
 #[test]
 fn async_auto_impls_sync(ctx: &mut AsyncContext) {
     assert_eq!(ctx.n, 1);
+}
+
+#[test_context(Context)]
+#[test]
+fn use_different_name(test_data: &mut Context) {
+    assert_eq!(test_data.n, 1);
+}
+
+#[test_context(AsyncContext)]
+#[tokio::test]
+async fn use_different_name_async(test_data: &mut AsyncContext) {
+    assert_eq!(test_data.n, 1);
 }
