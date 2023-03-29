@@ -16,7 +16,7 @@ struct MyContext {
 
 impl TestContext for MyContext {
     fn setup() -> MyContext {
-        MyContext {  value: "Hello, world!".to_string() }
+        MyContext {  value: "Hello, World!".to_string() }
     }
 
     fn teardown(self) {
@@ -27,7 +27,7 @@ impl TestContext for MyContext {
 #[test_context(MyContext)]
 #[test]
 fn test_works(ctx: &mut MyContext) {
-    assert_eq!(ctx.value, "Hello, world!");
+    assert_eq!(ctx.value, "Hello, World!");
 }
 ```
 
@@ -44,7 +44,7 @@ struct MyAsyncContext {
 #[async_trait::async_trait]
 impl AsyncTestContext for MyAsyncContext {
     async fn setup() -> MyAsyncContext {
-        MyAsyncContext { value: "Hello, world!".to_string() }
+        MyAsyncContext { value: "Hello, World!".to_string() }
     }
 
     async fn teardown(self) {
