@@ -51,7 +51,22 @@ struct AsyncContext {
     n: u32,
 }
 
+#[cfg(feature = "async_send")]
 #[async_trait::async_trait]
+impl AsyncTestContext for AsyncContext {
+    async fn setup() -> Self {
+        Self { n: 1 }
+    }
+
+    async fn teardown(self) {
+        if self.n != 1 {
+            panic!("Number changed");
+        }
+    }
+}
+
+#[cfg(not(feature = "async_send"))]
+#[async_trait::async_trait(?Send)]
 impl AsyncTestContext for AsyncContext {
     async fn setup() -> Self {
         Self { n: 1 }

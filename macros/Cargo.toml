@@ -12,6 +12,10 @@ license = "MIT"
 [lib]
 proc-macro = true
 
+[features]
+# Require async futures to be Send
+async_send = []
+
 [dependencies]
 quote = "1.0.3"
 syn = { version = "^1", features = ["full"] }

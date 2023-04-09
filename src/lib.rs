@@ -34,6 +34,7 @@
 //!     value: String
 //! }
 //!
+//! # #[cfg(feature = "async_send")]
 //! #[async_trait::async_trait]
 //! impl AsyncTestContext for MyAsyncContext {
 //!     async fn setup() -> MyAsyncContext {
@@ -45,9 +46,41 @@
 //!     }
 //! }
 //!
+//! # #[cfg(feature = "async_send")]
 //! #[test_context(MyAsyncContext)]
 //! fn test_works(ctx: &mut MyAsyncContext) {
 //!     assert_eq!(ctx.value, "Hello, World!");
+//! }
+//! ```
+//!
+//! In case your setup and teardown futures are not `Send`, you can disable
+//! default feature `async_send` and use `async_trait(?Send)`.
+//!
+//! ```
+//! use std::rc::Rc;
+//! use test_context::{test_context, AsyncTestContext};
+//!
+//! // Rc is not Send so Future's are also not Send
+//! struct MyAsyncContext {
+//!     value: Rc<String>
+//! }
+//!
+//! # #[cfg(not(feature = "async_send"))]
+//! #[async_trait::async_trait(?Send)]
+//! impl AsyncTestContext for MyAsyncContext {
+//!     async fn setup() -> MyAsyncContext {
+//!         MyAsyncContext { value: Rc::new("Hello, world!".to_string()) }
+//!     }
+//!
+//!     async fn teardown(self) {
+//!         // Perform any teardown you wish.
+//!     }
+//! }
+//!
+//! # #[cfg(not(feature = "async_send"))]
+//! #[test_context(MyAsyncContext)]
+//! fn test_works(ctx: &mut MyAsyncContext) {
+//!     assert_eq!(*ctx.value, "Hello, World!");
 //! }
 //! ```
 //!
@@ -60,6 +93,17 @@
 //! # struct MyAsyncContext {
 //! #     value: String
 //! # }
+//! # #[cfg(not(feature = "async_send"))]
+//! # #[async_trait::async_trait(?Send)]
+//! # impl AsyncTestContext for MyAsyncContext {
+//! #     async fn setup() -> MyAsyncContext {
+//! #         MyAsyncContext { value: "Hello, world!".to_string() }
+//! #     }
+//! #     async fn teardown(self) {
+//! #         // Perform any teardown you wish.
+//! #     }
+//! # }
+//! # #[cfg(feature = "async_send")]
 //! # #[async_trait::async_trait]
 //! # impl AsyncTestContext for MyAsyncContext {
 //! #     async fn setup() -> MyAsyncContext {
@@ -95,7 +139,23 @@ where
 }
 
 /// The trait to implement to get setup/teardown functionality for async tests.
+#[cfg(feature = "async_send")]
 #[async_trait::async_trait]
+pub trait AsyncTestContext
+where
+    Self: Sized,
+{
+    /// Create the context. This is run once before each test that uses the context.
+    async fn setup() -> Self;
+
+    /// Perform any additional cleanup of the context besides that already provided by
+    /// normal "drop" semantics.
+    async fn teardown(self) {}
+}
+
+/// The trait to implement to get setup/teardown functionality for async tests.
+#[cfg(not(feature = "async_send"))]
+#[async_trait::async_trait(?Send)]
 pub trait AsyncTestContext
 where
     Self: Sized,
@@ -113,9 +173,25 @@ where
 // A future improvement may be to use feature flags to enable using a specific runtime
 // to run the future synchronously. This is the easiest way to implement it, though, and
 // introduces no new dependencies.
+#[cfg(feature = "async_send")]
 impl<T> TestContext for T
 where
     T: AsyncTestContext + Send,
+{
+    fn setup() -> Self {
+        futures::executor::block_on(<T as AsyncTestContext>::setup())
+    }
+
+    fn teardown(self) {
+        futures::executor::block_on(<T as AsyncTestContext>::teardown(self))
+    }
+}
+
+// Automatically impl TestContext for anything that impls AsyncTestContext but not Send.
+#[cfg(not(feature = "async_send"))]
+impl<T> TestContext for T
+where
+    T: AsyncTestContext,
 {
     fn setup() -> Self {
         futures::executor::block_on(<T as AsyncTestContext>::setup())

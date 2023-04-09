@@ -10,6 +10,11 @@ authors = ["Mark Hildreth <mark.k.hildreth@gmail.com>"]
 license = "MIT"
 categories = ["development-tools::testing"]
 
+[features]
+default = ["async_send"]
+# Require async futures to be Send
+async_send = ["test-context-macros/async_send"]
+
 [dependencies]
 test-context-macros = { version = "0.1.4", path = "macros" }
 async-trait = "0.1.42"
