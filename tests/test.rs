@@ -51,7 +51,6 @@ struct AsyncContext {
     n: u32,
 }
 
-#[async_trait::async_trait]
 impl AsyncTestContext for AsyncContext {
     async fn setup() -> Self {
         Self { n: 1 }

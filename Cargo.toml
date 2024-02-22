@@ -12,13 +12,10 @@ categories = ["development-tools::testing"]
 
 [dependencies]
 test-context-macros = { version = "0.1.4", path = "macros" }
-async-trait = "0.1.42"
 futures = "0.3"
 
 [dev-dependencies]
-tokio = { version = "1.0", features = ["macros", "rt"]}
+tokio = { version = "1.0", features = ["macros", "rt"] }
 
 [workspace]
-members = [
-  "macros",
-]
+members = ["macros"]
