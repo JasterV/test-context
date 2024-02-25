@@ -1,3 +1,14 @@
 [workspace]
 resolver = "2"
 members = ["test-context", "test-context-macros"]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.4"
+homepage = "https://github.com/JasterV/test-context"
+repository = "https://github.com/JasterV/test-context"
+authors = [
+  "Mark Hildreth <mark.k.hildreth@gmail.com>",
+  "Victor Martinez <victor.martinez@jaster.xyz>",
+]
+license = "MIT"
