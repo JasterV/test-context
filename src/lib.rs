@@ -95,17 +95,18 @@ where
 }
 
 /// The trait to implement to get setup/teardown functionality for async tests.
-#[async_trait::async_trait]
 pub trait AsyncTestContext
 where
     Self: Sized,
 {
     /// Create the context. This is run once before each test that uses the context.
-    async fn setup() -> Self;
+    fn setup() -> impl std::future::Future<Output = Self> + Send;
 
     /// Perform any additional cleanup of the context besides that already provided by
     /// normal "drop" semantics.
-    async fn teardown(self) {}
+    fn teardown(self) -> impl std::future::Future<Output = ()> + Send {
+        async {}
+    }
 }
 
 // Automatically impl TestContext for anything Send that impls AsyncTestContext.
