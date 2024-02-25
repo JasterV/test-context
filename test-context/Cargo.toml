@@ -1,0 +1,20 @@
+[package]
+name = "test-context"
+description = "A library for providing custom setup/teardown for Rust tests without needing a test harness"
+readme = "../README.md"
+keywords = ["test", "setup", "teardown"]
+categories = ["development-tools::testing"]
+version.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+test-context-macros = { version = "0.1.4", path = "../test-context-macros/" }
+async-trait = "0.1.42"
+futures = "0.3"
+
+[dev-dependencies]
+tokio = { version = "1.0", features = ["macros", "rt"] }

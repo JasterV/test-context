@@ -1,25 +1,14 @@
-[package]
-name = "test-context"
-version = "0.1.4"
+[workspace]
+resolver = "2"
+members = ["test-context", "test-context-macros"]
+
+[workspace.package]
 edition = "2021"
-description = "A library for providing custom setup/teardown for Rust tests without needing a test harness"
+version = "0.1.4"
 homepage = "https://github.com/JasterV/test-context"
 repository = "https://github.com/JasterV/test-context"
-readme = "README.md"
 authors = [
   "Mark Hildreth <mark.k.hildreth@gmail.com>",
   "Victor Martinez <victor.martinez@jaster.xyz>",
 ]
 license = "MIT"
-categories = ["development-tools::testing"]
-
-[dependencies]
-test-context-macros = { version = "0.1.4", path = "macros" }
-async-trait = "0.1.42"
-futures = "0.3"
-
-[dev-dependencies]
-tokio = { version = "1.0", features = ["macros", "rt"] }
-
-[workspace]
-members = ["macros"]
