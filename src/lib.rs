@@ -1,6 +1,6 @@
 //! A library for providing custom setup/teardown for Rust tests without needing a test harness.
 //!
-//! ```
+//! ```no_run
 //! use test_context::{test_context, TestContext};
 //!
 //! struct MyContext {
