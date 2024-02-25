@@ -3,10 +3,6 @@
 ![License](https://img.shields.io/crates/l/test-context.svg)
 [![Github](https://github.com/markhildreth/test-context/workflows/Rust/badge.svg?branch=main)](https://github.com/markhildreth/test-context/actions)
 
-# Change of Maintainership
-
-I have stepped down as maintainer of this package. https://github.com/JasterV has gracciously offered to step in as the new maintainer. The new official repository is at https://github.com/JasterV/test-context.
-
 # test-context
 
 A library for providing custom setup/teardown for Rust tests without needing a test harness.
