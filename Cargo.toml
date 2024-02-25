@@ -3,10 +3,13 @@ name = "test-context"
 version = "0.1.4"
 edition = "2021"
 description = "A library for providing custom setup/teardown for Rust tests without needing a test harness"
-homepage = "https://github.com/markhildreth/test-context"
-repository = "https://github.com/markhildreth/test-context"
+homepage = "https://github.com/JasterV/test-context"
+repository = "https://github.com/JasterV/test-context"
 readme = "README.md"
-authors = ["Mark Hildreth <mark.k.hildreth@gmail.com>"]
+authors = [
+  "Mark Hildreth <mark.k.hildreth@gmail.com>",
+  "Victor Martinez <victor.martinez@jaster.xyz>",
+]
 license = "MIT"
 categories = ["development-tools::testing"]
 
