@@ -41,7 +41,6 @@ struct MyAsyncContext {
     value: String
 }
 
-#[async_trait::async_trait]
 impl AsyncTestContext for MyAsyncContext {
     async fn setup() -> MyAsyncContext {
         MyAsyncContext { value: "Hello, World!".to_string() }
