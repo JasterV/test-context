@@ -12,7 +12,7 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-test-context-macros = { version = "0.1.4", path = "../test-context-macros/" }
+test-context-macros = { version = "0.1.6", path = "../test-context-macros/" }
 async-trait = "0.1.42"
 futures = "0.3"
 
