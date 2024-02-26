@@ -9,7 +9,6 @@ use quote::{format_ident, quote};
 /// ```ignore
 /// #[test_context(MyContext)]
 /// #[test]
-/// #[ignore]
 /// fn my_test() {
 /// }
 /// ```
@@ -18,7 +17,6 @@ use quote::{format_ident, quote};
 ///
 /// ```ignore
 /// #[test]
-/// #[ignore]
 /// #[test_context(MyContext)]
 /// fn my_test() {
 /// }

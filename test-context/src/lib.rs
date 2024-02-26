@@ -27,14 +27,13 @@
 //! Alternatively, you can use `async` functions in your test context by using the
 //! `AsyncTestContext`.
 //!
-//! ```
+//! ```no_run
 //! use test_context::{test_context, AsyncTestContext};
 //!
 //! struct MyAsyncContext {
 //!     value: String
 //! }
 //!
-//! #[async_trait::async_trait]
 //! impl AsyncTestContext for MyAsyncContext {
 //!     async fn setup() -> MyAsyncContext {
 //!         MyAsyncContext { value: "Hello, world!".to_string() }
@@ -46,6 +45,7 @@
 //! }
 //!
 //! #[test_context(MyAsyncContext)]
+//! #[test]
 //! fn test_works(ctx: &mut MyAsyncContext) {
 //!     assert_eq!(ctx.value, "Hello, World!");
 //! }
@@ -55,20 +55,22 @@
 //! [`actix_rt::test`](https://docs.rs/actix-rt/1.1.1/actix_rt/attr.test.html) or
 //! [`tokio::test`](https://docs.rs/tokio/1.0.2/tokio/attr.test.html).
 //!
-//! ```
-//! # use test_context::{test_context, AsyncTestContext};
-//! # struct MyAsyncContext {
-//! #     value: String
-//! # }
-//! # #[async_trait::async_trait]
-//! # impl AsyncTestContext for MyAsyncContext {
-//! #     async fn setup() -> MyAsyncContext {
-//! #         MyAsyncContext { value: "Hello, world!".to_string() }
-//! #     }
-//! #     async fn teardown(self) {
-//! #         // Perform any teardown you wish.
-//! #     }
-//! # }
+//! ```no_run
+//!  use test_context::{test_context, AsyncTestContext};
+//!
+//!  struct MyAsyncContext {
+//!      value: String
+//!  }
+//!
+//!  impl AsyncTestContext for MyAsyncContext {
+//!      async fn setup() -> MyAsyncContext {
+//!          MyAsyncContext { value: "Hello, world!".to_string() }
+//!      }
+//!      async fn teardown(self) {
+//!          // Perform any teardown you wish.
+//!      }
+//!  }
+//!
 //! #[test_context(MyAsyncContext)]
 //! #[tokio::test]
 //! async fn test_async_works(ctx: &mut MyAsyncContext) {
@@ -95,17 +97,18 @@ where
 }
 
 /// The trait to implement to get setup/teardown functionality for async tests.
-#[async_trait::async_trait]
 pub trait AsyncTestContext
 where
     Self: Sized,
 {
     /// Create the context. This is run once before each test that uses the context.
-    async fn setup() -> Self;
+    fn setup() -> impl std::future::Future<Output = Self> + Send;
 
     /// Perform any additional cleanup of the context besides that already provided by
     /// normal "drop" semantics.
-    async fn teardown(self) {}
+    fn teardown(self) -> impl std::future::Future<Output = ()> + Send {
+        async {}
+    }
 }
 
 // Automatically impl TestContext for anything Send that impls AsyncTestContext.
