@@ -111,3 +111,23 @@ fn use_different_name(test_data: &mut Context) {
 async fn use_different_name_async(test_data: &mut AsyncContext) {
     assert_eq!(test_data.n, 1);
 }
+
+struct TeardownPanicContext {}
+
+impl AsyncTestContext for TeardownPanicContext {
+    async fn setup() -> Self {
+        Self {}
+    }
+
+    async fn teardown(self) {
+        panic!("boom!");
+    }
+}
+
+#[test_context(TeardownPanicContext, skip_teardown)]
+#[tokio::test]
+async fn test_async_skip_teardown(mut _ctx: TeardownPanicContext) {}
+
+#[test_context(TeardownPanicContext, skip_teardown)]
+#[test]
+fn test_sync_skip_teardown(mut _ctx: TeardownPanicContext) {}
