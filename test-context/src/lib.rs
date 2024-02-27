@@ -77,6 +77,30 @@
 //!     assert_eq!(ctx.value, "Hello, World!");
 //! }
 //! ```
+//!
+//! # Skipping the teardown execution
+//!
+//! If what you need is to take full __ownership__ of the context and don't care about the
+//! teardown execution for a specific test, you can use the `skip_teardown` keyword on the macro
+//! like this:
+//!
+//! ```no_run
+//!  use test_context::{test_context, TestContext};
+//!
+//!  struct MyContext {}
+//!
+//!  impl TestContext for MyContext {
+//!      fn setup() -> MyContext {
+//!          MyContext {}
+//!      }
+//!  }
+//!
+//! #[test_context(MyContext, skip_teardown)]
+//! #[test]
+//! fn test_without_teardown(ctx: MyContext) {
+//!   // Perform any operations that require full ownership of your context
+//! }
+//! ```
 
 // Reimported to allow for use in the macro.
 pub use futures;
