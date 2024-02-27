@@ -67,21 +67,17 @@ fn async_wrapper_body(args: TestContextArgs, wrapped_name: &Ident) -> proc_macro
     let body = if args.skip_teardown {
         quote! {
             let ctx = <#context_type as test_context::AsyncTestContext>::setup().await;
-            let #result_name = async move {
-                std::panic::AssertUnwindSafe(
-                    #wrapped_name(ctx)
-                ).catch_unwind().await
-            }.await;
+            let #result_name = std::panic::AssertUnwindSafe(
+                #wrapped_name(ctx)
+            ).catch_unwind().await;
         }
     } else {
         quote! {
             let mut ctx = <#context_type as test_context::AsyncTestContext>::setup().await;
             let ctx_reference = &mut ctx;
-            let #result_name = async move {
-                std::panic::AssertUnwindSafe(
-                    #wrapped_name(ctx_reference)
-                ).catch_unwind().await
-            }.await;
+            let #result_name = std::panic::AssertUnwindSafe(
+                #wrapped_name(ctx_reference)
+            ).catch_unwind().await;
             <#context_type as test_context::AsyncTestContext>::teardown(ctx).await;
         }
     };
