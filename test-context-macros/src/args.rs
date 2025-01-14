@@ -1,14 +1,14 @@
-use syn::{parse::Parse, Ident, Token};
+use syn::{parse::Parse, Token, Type};
 
 pub(crate) struct TestContextArgs {
-    pub(crate) context_type: Ident,
+    pub(crate) context_type: Type,
     pub(crate) skip_teardown: bool,
 }
 
 impl Parse for TestContextArgs {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let mut skip_teardown = false;
-        let mut context_type: Option<Ident> = None;
+        let mut context_type: Option<Type> = None;
 
         while !input.is_empty() {
             let lookahead = input.lookahead1();
@@ -18,10 +18,8 @@ impl Parse for TestContextArgs {
                 }
                 let _ = input.parse::<kw::skip_teardown>()?;
                 skip_teardown = true;
-            } else if lookahead.peek(Ident) {
-                if context_type.is_some() {
-                    return Err(input.error("expected only a single type identifier"));
-                }
+            } else if context_type.is_none() {
+                // Parse any valid Rust type, including generic types
                 context_type = Some(input.parse()?);
             } else if lookahead.peek(Token![,]) {
                 let _ = input.parse::<Token![,]>()?;

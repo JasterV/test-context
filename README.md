@@ -31,6 +31,42 @@ fn test_works(ctx: &mut MyContext) {
 }
 ```
 
+with generic types, you can use same type with different values
+
+```rust
+use test_context::{test_context, TestContext};
+use std::marker::PhantomData;
+
+struct MyGenericContext<T> {
+    value: u32,
+    _marker: PhantomData<T>,
+}
+
+impl TestContext for MyGenericContext<String> {
+    fn setup() -> MyGenericContext<String> {
+        MyGenericContext { value: 1, _marker: PhantomData }
+    }
+}
+
+#[test_context(MyGenericContext<String>)]
+#[test]
+fn test_generic_type(ctx: &mut MyGenericContext<String>) {
+    assert_eq!(ctx.value, 1);
+}
+
+impl TestContext for MyGenericContext<u32> {
+    fn setup() -> MyGenericContext<u32> {
+        MyGenericContext { value: 2, _marker: PhantomData }
+    }
+}
+
+#[test_context(MyGenericContext<u32>)]
+#[test]
+fn test_generic_type_u32(ctx: &mut MyGenericContext<u32>) {
+    assert_eq!(ctx.value, 2);
+}
+```
+
 Alternatively, you can use `async` functions in your test context by using the
 `AsyncTestContext`.
 
