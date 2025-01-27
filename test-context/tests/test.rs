@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use test_context::{test_context, AsyncTestContext, TestContext};
 
 struct Context {
@@ -45,6 +47,43 @@ fn return_value_func(ctx: &mut Context) -> u32 {
 #[test]
 fn includes_return_value() {
     assert_eq!(return_value_func(), 1);
+}
+
+struct ContextGeneric<T> {
+    n: u32,
+    _marker: PhantomData<T>,
+}
+
+struct ContextGenericType1;
+impl TestContext for ContextGeneric<ContextGenericType1> {
+    fn setup() -> Self {
+        Self {
+            n: 1,
+            _marker: PhantomData,
+        }
+    }
+}
+
+#[test_context(ContextGeneric<ContextGenericType1>)]
+#[test]
+fn test_generic_type(ctx: &mut ContextGeneric<ContextGenericType1>) {
+    assert_eq!(ctx.n, 1);
+}
+
+struct ContextGenericType2;
+impl TestContext for ContextGeneric<ContextGenericType2> {
+    fn setup() -> Self {
+        Self {
+            n: 2,
+            _marker: PhantomData,
+        }
+    }
+}
+
+#[test_context(ContextGeneric<ContextGenericType2>)]
+#[test]
+fn test_generic_type_other(ctx: &mut ContextGeneric<ContextGenericType2>) {
+    assert_eq!(ctx.n, 2);
 }
 
 struct AsyncContext {
