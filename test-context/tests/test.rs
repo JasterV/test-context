@@ -145,7 +145,7 @@ impl TestContext for GenericContext<u32> {
 impl TestContext for GenericContext<String> {
     fn setup() -> Self {
         Self {
-            contents: format!("hello world"),
+            contents: "hello world".to_string(),
         }
     }
 }
