@@ -144,7 +144,9 @@ impl TestContext for GenericContext<u32> {
 
 impl TestContext for GenericContext<String> {
     fn setup() -> Self {
-        Self { contents: format!("hello world") }
+        Self {
+            contents: format!("hello world"),
+        }
     }
 }
 
