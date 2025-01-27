@@ -4,7 +4,7 @@ members = ["test-context", "test-context-macros"]
 
 [workspace.package]
 edition = "2021"
-version = "0.3.0"
+version = "0.4.0"
 rust-version = "1.75.0"
 homepage = "https://github.com/JasterV/test-context"
 repository = "https://github.com/JasterV/test-context"
