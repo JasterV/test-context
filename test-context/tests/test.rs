@@ -131,3 +131,43 @@ async fn test_async_skip_teardown(mut _ctx: TeardownPanicContext) {}
 #[test_context(TeardownPanicContext, skip_teardown)]
 #[test]
 fn test_sync_skip_teardown(mut _ctx: TeardownPanicContext) {}
+
+struct GenericContext<T> {
+    contents: T,
+}
+
+impl TestContext for GenericContext<u32> {
+    fn setup() -> Self {
+        Self { contents: 1 }
+    }
+}
+
+impl TestContext for GenericContext<String> {
+    fn setup() -> Self {
+        Self { contents: format!("hello world") }
+    }
+}
+
+impl AsyncTestContext for GenericContext<u64> {
+    async fn setup() -> Self {
+        Self { contents: 1 }
+    }
+}
+
+#[test_context(GenericContext<u32>)]
+#[test]
+fn test_generic_with_u32(ctx: &mut GenericContext<u32>) {
+    assert_eq!(ctx.contents, 1);
+}
+
+#[test_context(GenericContext<String>)]
+#[test]
+fn test_generic_with_string(ctx: &mut GenericContext<String>) {
+    assert_eq!(ctx.contents, "hello world");
+}
+
+#[test_context(GenericContext<u64>)]
+#[tokio::test]
+async fn test_async_generic(ctx: &mut GenericContext<u64>) {
+    assert_eq!(ctx.contents, 1);
+}

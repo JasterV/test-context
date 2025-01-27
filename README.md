@@ -29,6 +29,22 @@ impl TestContext for MyContext {
 fn test_works(ctx: &mut MyContext) {
     assert_eq!(ctx.value, "Hello, World!");
 }
+
+struct MyGenericContext<T> {
+    value: T
+}
+
+impl TestContext for MyGenericContext<u32> {
+    fn setup() -> MyGenericContext<u32> {
+        MyGenericContext { value: 1 }
+    }
+}
+
+#[test_context(MyGenericContext<u32>)]
+#[test]
+fn test_generic_type(ctx: &mut MyGenericContext<u32>) {
+    assert_eq!(ctx.value, 1);
+}
 ```
 
 Alternatively, you can use `async` functions in your test context by using the
