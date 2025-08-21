@@ -78,6 +78,29 @@
 //! }
 //! ```
 //!
+//! # Attribute order
+//!
+//! Attribute order matters. Always place `#[test_context(...)]` before other test attributes
+//! like `#[tokio::test]` or `#[test]`.
+//!
+//! Why: Rust expands attributes in source order. `#[test_context]` wraps your function and
+//! re-attaches the remaining attributes to the wrapper; it must run first so the test attributes
+//! apply to the wrapper that performs setup/teardown.
+//!
+//! Valid:
+//! ```ignore
+//! #[test_context(MyAsyncContext)]
+//! #[tokio::test]
+//! async fn my_test(ctx: &mut MyAsyncContext) {}
+//! ```
+//!
+//! Invalid:
+//! ```ignore
+//! #[tokio::test]
+//! #[test_context(MyAsyncContext)]
+//! async fn my_test(ctx: &mut MyAsyncContext) {}
+//! ```
+//!
 //! # Skipping the teardown execution
 //!
 //! If what you need is to take full __ownership__ of the context and don't care about the

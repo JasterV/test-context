@@ -85,6 +85,46 @@ async fn test_works(ctx: &mut MyAsyncContext) {
 }
 ```
 
+### Attribute order
+
+Place `#[test_context(...)]` before other test attributes like `#[tokio::test]` or `#[test]`.
+
+Why: Attributes expand in source order. `#[test_context]` generates a wrapper and reattaches
+the remaining attributes to it. It must run first so the test attribute applies to the wrapper
+that runs setup/teardown.
+
+Valid:
+
+```rust
+#[test_context(MyAsyncContext)]
+#[tokio::test]
+async fn my_test(ctx: &mut MyAsyncContext) {}
+```
+
+Invalid:
+
+```rust
+#[tokio::test]
+#[test_context(MyAsyncContext)]
+async fn my_test(ctx: &mut MyAsyncContext) {}
+```
+
+## Using AsyncTestContext in sync tests that require Tokio
+
+By default, when you use an `AsyncTestContext` in a synchronous test (no `#[tokio::test]`),
+this crate runs `setup`/`teardown` using the `futures` executor. If your context calls
+Tokio-only APIs (e.g., `tokio::time::sleep`, timers, or Tokio sockets) during setup/teardown,
+enable the optional `tokio-runtime` feature so those steps run inside a Tokio runtime:
+
+```toml
+[dependencies]
+test-context = { version = "0.4", features = ["tokio-runtime"] }
+```
+
+With this feature, the crate tries to reuse an existing runtime; if none is present, it creates
+an ephemeral current-thread Tokio runtime around `setup` and `teardown` for sync tests. Async
+tests annotated with `#[tokio::test]` continue to work as usual without the feature.
+
 ## Skipping the teardown execution
 
 If what you need is to take full **ownership** of the context and don't care about the
