@@ -3,7 +3,7 @@ mod args;
 use args::TestContextArgs;
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::Ident;
+use syn::{Block, Ident};
 
 /// Macro to use on tests to add the setup/teardown functionality of your context.
 ///
@@ -30,55 +30,44 @@ pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
     let args = syn::parse_macro_input!(attr as TestContextArgs);
 
     let input = syn::parse_macro_input!(item as syn::ItemFn);
-    let ret = &input.sig.output;
-    let name = &input.sig.ident;
-    let arguments = &input.sig.inputs;
-    let body = &input.block;
-    let attrs = &input.attrs;
     let is_async = input.sig.asyncness.is_some();
 
-    let wrapped_name = format_ident!("__test_context_wrapped_{}", name);
+    // Находим и удаляем аргумент контекста из сигнатуры
+    let (new_input, context_arg_name) = extract_and_remove_context_arg(input.clone());
 
     let wrapper_body = if is_async {
-        async_wrapper_body(args, &wrapped_name)
+        async_wrapper_body(args, &context_arg_name, &input.block)
     } else {
-        sync_wrapper_body(args, &wrapped_name)
+        sync_wrapper_body(args, &context_arg_name, &input.block)
     };
 
-    let async_tag = if is_async {
-        quote! { async }
-    } else {
-        quote! {}
-    };
+    let mut result_input = new_input;
+    result_input.block = Box::new(syn::parse2(wrapper_body).unwrap());
 
-    quote! {
-        #(#attrs)*
-        #async_tag fn #name() #ret #wrapper_body
-
-        #async_tag fn #wrapped_name(#arguments) #ret #body
-    }
-    .into()
+    quote! { #result_input }.into()
 }
 
-fn async_wrapper_body(args: TestContextArgs, wrapped_name: &Ident) -> proc_macro2::TokenStream {
+fn async_wrapper_body(
+    args: TestContextArgs,
+    context_arg_name: &Option<syn::Ident>,
+    body: &Box<Block>,
+) -> proc_macro2::TokenStream {
     let context_type = args.context_type;
     let result_name = format_ident!("wrapped_result");
 
+    let binding = format_ident!("test_ctx");
+    let context_name = context_arg_name.as_ref().unwrap_or(&binding);
+
     let body = if args.skip_teardown {
         quote! {
-            let ctx = <#context_type as test_context::AsyncTestContext>::setup().await;
-            let #result_name = std::panic::AssertUnwindSafe(
-                #wrapped_name(ctx)
-            ).catch_unwind().await;
+            let #context_name = <#context_type as test_context::AsyncTestContext>::setup().await;
+            let #result_name = std::panic::AssertUnwindSafe( async { #body } ).catch_unwind().await;
         }
     } else {
         quote! {
-            let mut ctx = <#context_type as test_context::AsyncTestContext>::setup().await;
-            let ctx_reference = &mut ctx;
-            let #result_name = std::panic::AssertUnwindSafe(
-                #wrapped_name(ctx_reference)
-            ).catch_unwind().await;
-            <#context_type as test_context::AsyncTestContext>::teardown(ctx).await;
+            let mut #context_name = <#context_type as test_context::AsyncTestContext>::setup().await;
+            let #result_name = std::panic::AssertUnwindSafe( async { #body } ).catch_unwind().await;
+            <#context_type as test_context::AsyncTestContext>::teardown(#context_name).await;
         }
     };
 
@@ -93,25 +82,31 @@ fn async_wrapper_body(args: TestContextArgs, wrapped_name: &Ident) -> proc_macro
     }
 }
 
-fn sync_wrapper_body(args: TestContextArgs, wrapped_name: &Ident) -> proc_macro2::TokenStream {
+fn sync_wrapper_body(
+    args: TestContextArgs,
+    context_arg_name: &Option<syn::Ident>,
+    body: &Box<Block>,
+) -> proc_macro2::TokenStream {
     let context_type = args.context_type;
     let result_name = format_ident!("wrapped_result");
 
+    let binding = format_ident!("test_ctx");
+    let context_name = context_arg_name.as_ref().unwrap_or(&binding);
+
     let body = if args.skip_teardown {
         quote! {
-            let ctx = <#context_type as test_context::TestContext>::setup();
-            let #result_name = std::panic::catch_unwind(move || {
-                #wrapped_name(ctx)
+            let #context_name = <#context_type as test_context::TestContext>::setup();
+            let #result_name = std::panic::catch_unwind(|| {
+                #body
             });
         }
     } else {
         quote! {
-            let mut ctx = <#context_type as test_context::TestContext>::setup();
-            let mut pointer = std::panic::AssertUnwindSafe(&mut ctx);
-            let #result_name = std::panic::catch_unwind(move || {
-                #wrapped_name(*pointer)
+            let mut #context_name = <#context_type as test_context::TestContext>::setup();
+            let #result_name = std::panic::catch_unwind(|| {
+                #body
             });
-            <#context_type as test_context::TestContext>::teardown(ctx);
+            <#context_type as test_context::TestContext>::teardown(#context_name);
         }
     };
 
@@ -134,4 +129,25 @@ fn handle_result(result_name: Ident) -> proc_macro2::TokenStream {
             }
         }
     }
+}
+
+fn extract_and_remove_context_arg(mut input: syn::ItemFn) -> (syn::ItemFn, Option<syn::Ident>) {
+    let mut context_arg_name = None;
+    let mut new_args = syn::punctuated::Punctuated::new();
+
+    for arg in &input.sig.inputs {
+        if let syn::FnArg::Typed(pat_type) = arg {
+            if let syn::Pat::Ident(pat_ident) = &*pat_type.pat {
+                if let syn::Type::Reference(type_ref) = &*pat_type.ty {
+                    // Сохраняем имя аргумента контекста
+                    context_arg_name = Some(pat_ident.ident.clone());
+                    continue; // Пропускаем этот аргумент
+                }
+            }
+        }
+        new_args.push(arg.clone());
+    }
+
+    input.sig.inputs = new_args;
+    (input, context_arg_name)
 }
