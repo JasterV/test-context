@@ -118,7 +118,7 @@ enable the optional `tokio-runtime` feature so those steps run inside a Tokio ru
 
 ```toml
 [dependencies]
-test-context = { version = "0.4", features = ["tokio-runtime"] }
+test-context = { version = "0.5", features = ["tokio-runtime"] }
 ```
 
 With this feature, the crate tries to reuse an existing runtime; if none is present, it creates
@@ -127,7 +127,7 @@ tests annotated with `#[tokio::test]` continue to work as usual without the feat
 
 ## Skipping the teardown execution
 
-If what you need is to take full **ownership** of the context and don't care about the
+Also, if you don't care about the
 teardown execution for a specific test, you can use the `skip_teardown` keyword on the macro
 like this:
 
@@ -144,7 +144,7 @@ like this:
 
 #[test_context(MyContext, skip_teardown)]
 #[test]
-fn test_without_teardown(ctx: MyContext) {
+fn test_without_teardown(ctx: &mut MyContext) {
   // Perform any operations that require full ownership of your context
 }
 ```

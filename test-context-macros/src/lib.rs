@@ -32,7 +32,8 @@ pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(item as syn::ItemFn);
     let is_async = input.sig.asyncness.is_some();
 
-    let (new_input, context_arg_name) = extract_and_remove_context_arg(input.clone());
+    let (new_input, context_arg_name) =
+        extract_and_remove_context_arg(input.clone(), args.context_type.clone());
 
     let wrapper_body = if is_async {
         async_wrapper_body(args, &context_arg_name, &input.block)
@@ -131,16 +132,26 @@ fn handle_result(result_name: Ident) -> proc_macro2::TokenStream {
     }
 }
 
-fn extract_and_remove_context_arg(mut input: syn::ItemFn) -> (syn::ItemFn, Option<syn::Ident>) {
+// TODO: Possible bugs when using: type aliases, full and relative paths, generic types in context type
+fn extract_and_remove_context_arg(
+    mut input: syn::ItemFn,
+    expected_context_type: syn::Type,
+) -> (syn::ItemFn, Option<syn::Ident>) {
     let mut context_arg_name = None;
     let mut new_args = syn::punctuated::Punctuated::new();
 
     for arg in &input.sig.inputs {
+        // Extract function arg:
         if let syn::FnArg::Typed(pat_type) = arg {
+            // Extract arg identifier:
             if let syn::Pat::Ident(pat_ident) = &*pat_type.pat {
-                if let syn::Type::Reference(_) = &*pat_type.ty {
-                    context_arg_name = Some(pat_ident.ident.clone());
-                    continue;
+                // Check that context arg is only ref or mutable ref:
+                if let syn::Type::Reference(type_ref) = &*pat_type.ty {
+                    // Check that context has expected type:
+                    if types_equal(&type_ref.elem, &expected_context_type) {
+                        context_arg_name = Some(pat_ident.ident.clone());
+                        continue;
+                    }
                 }
             }
         }
@@ -149,4 +160,12 @@ fn extract_and_remove_context_arg(mut input: syn::ItemFn) -> (syn::ItemFn, Optio
 
     input.sig.inputs = new_args;
     (input, context_arg_name)
+}
+
+fn types_equal(a: &syn::Type, b: &syn::Type) -> bool {
+    if let (syn::Type::Path(a_path), syn::Type::Path(b_path)) = (a, b) {
+        return a_path.path.segments.last().unwrap().ident
+            == b_path.path.segments.last().unwrap().ident;
+    }
+    quote!(#a).to_string() == quote!(#b).to_string()
 }
