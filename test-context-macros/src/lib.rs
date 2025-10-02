@@ -32,7 +32,6 @@ pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(item as syn::ItemFn);
     let is_async = input.sig.asyncness.is_some();
 
-    // Находим и удаляем аргумент контекста из сигнатуры
     let (new_input, context_arg_name) = extract_and_remove_context_arg(input.clone());
 
     let wrapper_body = if is_async {
@@ -95,17 +94,18 @@ fn sync_wrapper_body(
 
     let body = if args.skip_teardown {
         quote! {
-            let #context_name = <#context_type as test_context::TestContext>::setup();
-            let #result_name = std::panic::catch_unwind(|| {
+            let mut #context_name = <#context_type as test_context::TestContext>::setup();
+            let #result_name = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                let #context_name = &mut #context_name;
                 #body
-            });
+            }));
         }
     } else {
         quote! {
             let mut #context_name = <#context_type as test_context::TestContext>::setup();
-            let #result_name = std::panic::catch_unwind(|| {
+            let #result_name = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 #body
-            });
+            }));
             <#context_type as test_context::TestContext>::teardown(#context_name);
         }
     };
@@ -138,10 +138,9 @@ fn extract_and_remove_context_arg(mut input: syn::ItemFn) -> (syn::ItemFn, Optio
     for arg in &input.sig.inputs {
         if let syn::FnArg::Typed(pat_type) = arg {
             if let syn::Pat::Ident(pat_ident) = &*pat_type.pat {
-                if let syn::Type::Reference(type_ref) = &*pat_type.ty {
-                    // Сохраняем имя аргумента контекста
+                if let syn::Type::Reference(_) = &*pat_type.ty {
                     context_arg_name = Some(pat_ident.ident.clone());
-                    continue; // Пропускаем этот аргумент
+                    continue;
                 }
             }
         }
