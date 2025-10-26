@@ -149,4 +149,68 @@ fn test_without_teardown(ctx: &mut MyContext) {
 }
 ```
 
+## ⚠️ Ensure that the context type specified in the macro matches the test function argument type exactly
+
+The error occurs when a context type with an absolute path is mixed with an it's alias.
+
+For example:
+
+```
+mod database {
+    use test_context::TestContext;
+
+    pub struct Connection;
+
+    impl TestContext for :Connection {
+    	fn setup() -> Self {Connection}
+    	fn teardown(self) {...}
+	}
+}
+```
+
+✅The following code will work:
+```
+use database::Connection as DbConn;
+
+#[test_context(DbConn)]
+#[test]
+fn test1(ctx: &mut DbConn) {
+	//some test logic
+}
+
+// or
+
+use database::Connection
+
+#[test_context(database::Connection)]
+#[test]
+fn test1(ctx: &mut database::Connection) {
+	//some test logic
+}
+```
+
+❌The following code will not work:
+```
+use database::Connection as DbConn;
+
+#[test_context(database::Connection)]
+#[test]
+fn test1(ctx: &mut DbConn) {
+	//some test logic
+}
+
+// or
+
+use database::Connection as DbConn;
+
+#[test_context(DbConn)]
+#[test]
+fn test1(ctx: &mut database::Connection) {
+	//some test logic
+}
+```
+
+Type mismatches will cause context parsing to fail during either static analysis or compilation.
+
+
 License: MIT

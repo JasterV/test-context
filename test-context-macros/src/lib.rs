@@ -132,7 +132,6 @@ fn handle_result(result_name: Ident) -> proc_macro2::TokenStream {
     }
 }
 
-// TODO: Possible bugs when using: type aliases, full and relative paths, generic types in context type
 fn extract_and_remove_context_arg(
     mut input: syn::ItemFn,
     expected_context_type: syn::Type,
