@@ -164,12 +164,10 @@ impl AsyncTestContext for TeardownPanicContext {
     }
 }
 
-// NOTE: redo next with transfer argument by mutable reference only, not by ownership like it was before !!!
 #[test_context(TeardownPanicContext, skip_teardown)]
 #[tokio::test]
 async fn test_async_skip_teardown(_ctx: &mut TeardownPanicContext) {}
 
-// NOTE: redo next with transfer argument by mutable reference only, not by ownership like it was before !!!
 #[test_context(TeardownPanicContext, skip_teardown)]
 #[test]
 fn test_sync_skip_teardown(_ctx: &mut TeardownPanicContext) {}
