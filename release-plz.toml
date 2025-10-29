@@ -1,0 +1,6 @@
+[workspace]
+pr_branch_prefix = "release-"
+pr_labels = ["release"]
+git_tag_enable = true
+git_tag_name = "v{{ version }}"
+pr_draft = true
