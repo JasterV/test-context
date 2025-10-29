@@ -228,7 +228,6 @@ impl AsyncTestContext for MyAsyncContext {
 
     async fn teardown(self) {
         println!("Answer is {}", self.what_the_of_life);
-        drop(self);
     }
 }
 
@@ -255,7 +254,6 @@ impl TestContext for MyContext {
 
     fn teardown(self) {
         println!("Answer is {}", self.what_the_of_life);
-        drop(self);
     }
 }
 
