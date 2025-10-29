@@ -50,7 +50,7 @@ pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
 fn async_wrapper_body(
     args: TestContextArgs,
     context_arg_name: &Option<syn::Ident>,
-    body: &Box<Block>,
+    body: &Block,
 ) -> proc_macro2::TokenStream {
     let context_type = args.context_type;
     let result_name = format_ident!("wrapped_result");
@@ -85,7 +85,7 @@ fn async_wrapper_body(
 fn sync_wrapper_body(
     args: TestContextArgs,
     context_arg_name: &Option<syn::Ident>,
-    body: &Box<Block>,
+    body: &Block,
 ) -> proc_macro2::TokenStream {
     let context_type = args.context_type;
     let result_name = format_ident!("wrapped_result");
