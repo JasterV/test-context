@@ -118,7 +118,7 @@ enable the optional `tokio-runtime` feature so those steps run inside a Tokio ru
 
 ```toml
 [dependencies]
-test-context = { version = "0.4", features = ["tokio-runtime"] }
+test-context = { version = "0.5", features = ["tokio-runtime"] }
 ```
 
 With this feature, the crate tries to reuse an existing runtime; if none is present, it creates
@@ -127,7 +127,7 @@ tests annotated with `#[tokio::test]` continue to work as usual without the feat
 
 ## Skipping the teardown execution
 
-If what you need is to take full **ownership** of the context and don't care about the
+Also, if you don't care about the
 teardown execution for a specific test, you can use the `skip_teardown` keyword on the macro
 like this:
 
@@ -144,9 +144,73 @@ like this:
 
 #[test_context(MyContext, skip_teardown)]
 #[test]
-fn test_without_teardown(ctx: MyContext) {
+fn test_without_teardown(ctx: &mut MyContext) {
   // Perform any operations that require full ownership of your context
 }
 ```
+
+## ⚠️ Ensure that the context type specified in the macro matches the test function argument type exactly
+
+The error occurs when a context type with an absolute path is mixed with an it's alias.
+
+For example:
+
+```
+mod database {
+    use test_context::TestContext;
+
+    pub struct Connection;
+
+    impl TestContext for :Connection {
+    	fn setup() -> Self {Connection}
+    	fn teardown(self) {...}
+	}
+}
+```
+
+✅The following code will work:
+```
+use database::Connection as DbConn;
+
+#[test_context(DbConn)]
+#[test]
+fn test1(ctx: &mut DbConn) {
+	//some test logic
+}
+
+// or
+
+use database::Connection
+
+#[test_context(database::Connection)]
+#[test]
+fn test1(ctx: &mut database::Connection) {
+	//some test logic
+}
+```
+
+❌The following code will not work:
+```
+use database::Connection as DbConn;
+
+#[test_context(database::Connection)]
+#[test]
+fn test1(ctx: &mut DbConn) {
+	//some test logic
+}
+
+// or
+
+use database::Connection as DbConn;
+
+#[test_context(DbConn)]
+#[test]
+fn test1(ctx: &mut database::Connection) {
+	//some test logic
+}
+```
+
+Type mismatches will cause context parsing to fail during either static analysis or compilation.
+
 
 License: MIT

@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use rstest::rstest;
 use test_context::{test_context, AsyncTestContext, TestContext};
 
 struct Context {
@@ -165,11 +166,11 @@ impl AsyncTestContext for TeardownPanicContext {
 
 #[test_context(TeardownPanicContext, skip_teardown)]
 #[tokio::test]
-async fn test_async_skip_teardown(mut _ctx: TeardownPanicContext) {}
+async fn test_async_skip_teardown(_ctx: &mut TeardownPanicContext) {}
 
 #[test_context(TeardownPanicContext, skip_teardown)]
 #[test]
-fn test_sync_skip_teardown(mut _ctx: TeardownPanicContext) {}
+fn test_sync_skip_teardown(_ctx: &mut TeardownPanicContext) {}
 
 struct GenericContext<T> {
     contents: T,
@@ -209,6 +210,60 @@ fn test_generic_with_string(ctx: &mut GenericContext<String>) {
 
 #[test_context(GenericContext<u64>)]
 #[tokio::test]
-async fn test_async_generic(ctx: &mut GenericContext<u64>) {
-    assert_eq!(ctx.contents, 1);
+async fn test_async_generic(test_ctx: &mut GenericContext<u64>) {
+    assert_eq!(test_ctx.contents, 1);
+}
+
+struct MyAsyncContext {
+    what_the_of_life: u32,
+}
+
+impl AsyncTestContext for MyAsyncContext {
+    async fn setup() -> Self {
+        println!("I guess...");
+        MyAsyncContext {
+            what_the_of_life: 42,
+        }
+    }
+
+    async fn teardown(self) {
+        println!("Answer is {}", self.what_the_of_life);
+        drop(self);
+    }
+}
+
+#[test_context(MyAsyncContext)]
+#[rstest]
+#[case("Hello, World!")]
+#[tokio::test]
+async fn test_async_generic_with_sync(#[case] value: String, test_ctx: &mut MyAsyncContext) {
+    println!("Something happens sync... {}", value);
+    assert_eq!(test_ctx.what_the_of_life, 42);
+}
+
+struct MyContext {
+    what_the_of_life: u32,
+}
+
+impl TestContext for MyContext {
+    fn setup() -> Self {
+        println!("I guess...");
+        MyContext {
+            what_the_of_life: 42,
+        }
+    }
+
+    fn teardown(self) {
+        println!("Answer is {}", self.what_the_of_life);
+        drop(self);
+    }
+}
+
+#[test_context(MyContext)]
+#[rstest]
+#[case("Hello, World!")]
+#[test]
+fn test_async_generic_with_async(test_ctx: &mut MyContext, #[case] value: String) {
+    println!("Something happens async... {}", value);
+    assert_eq!(test_ctx.what_the_of_life, 42);
 }
