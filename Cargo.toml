@@ -3,9 +3,9 @@ resolver = "2"
 members = ["test-context", "test-context-macros"]
 
 [workspace.package]
-edition = "2021"
-version = "0.5.0"
-rust-version = "1.75.0"
+edition = "2024"
+version = "0.5.1"
+rust-version = "1.91.0"
 homepage = "https://github.com/JasterV/test-context"
 repository = "https://github.com/JasterV/test-context"
 authors = [

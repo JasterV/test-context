@@ -1,4 +1,4 @@
-use syn::{parse::Parse, Token, Type};
+use syn::{Token, Type, parse::Parse};
 
 pub(crate) struct TestContextArgs {
     pub(crate) context_type: Type,
