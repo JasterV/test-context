@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use rstest::rstest;
-use test_context::{test_context, AsyncTestContext, TestContext};
+use test_context::{AsyncTestContext, TestContext, test_context};
 
 struct Context {
     n: u32,
