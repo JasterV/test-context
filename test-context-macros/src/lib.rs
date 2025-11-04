@@ -50,35 +50,38 @@ fn refactor_input_body(
     let body = match (is_async, args.skip_teardown) {
         (true, true) => {
             quote! {
-            use test_context::futures::FutureExt;
-                let #context_arg_name = <#context_type as test_context::AsyncTestContext>::setup().await;
+                use test_context::futures::FutureExt;
+                let mut __context = <#context_type as test_context::AsyncTestContext>::setup().await;
+                let #context_arg_name = &mut __context;
                 let #result_name = std::panic::AssertUnwindSafe( async { #body } ).catch_unwind().await;
             }
         }
         (true, false) => {
             quote! {
-            use test_context::futures::FutureExt;
-                let mut #context_arg_name = <#context_type as test_context::AsyncTestContext>::setup().await;
+                use test_context::futures::FutureExt;
+                let mut __context = <#context_type as test_context::AsyncTestContext>::setup().await;
+                let #context_arg_name = &mut __context;
                 let #result_name = std::panic::AssertUnwindSafe( async { #body } ).catch_unwind().await;
-                <#context_type as test_context::AsyncTestContext>::teardown(#context_arg_name).await;
+                <#context_type as test_context::AsyncTestContext>::teardown(__context).await;
             }
         }
         (false, true) => {
             quote! {
-                let mut #context_arg_name= <#context_type as test_context::TestContext>::setup();
+                let mut __context = <#context_type as test_context::TestContext>::setup();
                 let #result_name = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                    let #context_arg_name = &mut #context_arg_name;
+                    let #context_arg_name = &mut __context;
                     #body
                 }));
             }
         }
         (false, false) => {
             quote! {
-                let mut #context_arg_name = <#context_type as test_context::TestContext>::setup();
+                let mut __context = <#context_type as test_context::TestContext>::setup();
                 let #result_name = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    let #context_arg_name = &mut __context;
                     #body
                 }));
-                <#context_type as test_context::TestContext>::teardown(#context_arg_name);
+                <#context_type as test_context::TestContext>::teardown(__context);
             }
         }
     };
