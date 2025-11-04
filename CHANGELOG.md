@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1](https://github.com/JasterV/test-context/compare/v0.5.0...v0.5.1) - 2025-11-04
+
+### Fixed
+
+- Regression in version 0.5.0 ([#55](https://github.com/JasterV/test-context/pull/55))
+
 ### Added
 - Add a CHANGELOG by @JasterV
 - Add a rust-toolchain.toml by @JasterV
