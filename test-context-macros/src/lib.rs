@@ -40,7 +40,7 @@ pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let context_arg = context_args.into_iter().next().unwrap();
 
-    if !args.skip_teardown && context_arg.mode == ContextArgMode::Owned {
+    if !args.skip_teardown && context_arg.mode.is_owned() {
         panic!(
             "It is not possible to take ownership of the context if the teardown has to be ran."
         );
@@ -97,6 +97,7 @@ fn refactor_input_body(
 
     let context_binding = match context_arg.mode {
         ContextArgMode::Owned => quote! { let #context_arg_name = __context; },
+        ContextArgMode::OwnedMut => quote! { let mut #context_arg_name = __context; },
         ContextArgMode::Reference => quote! { let #context_arg_name = &__context; },
         ContextArgMode::MutableReference => quote! { let #context_arg_name = &mut __context; },
     };

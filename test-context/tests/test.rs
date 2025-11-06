@@ -183,6 +183,12 @@ async fn test_async_skip_teardown_with_immutable_ref(_ctx: &TeardownPanicContext
 async fn test_async_skip_teardown_with_full_ownership(_ctx: TeardownPanicContext) {}
 
 #[test_context(TeardownPanicContext, skip_teardown)]
+#[tokio::test]
+async fn test_async_skip_teardown_with_full_mut_ownership(mut ctx: TeardownPanicContext) {
+    let _test = &mut ctx;
+}
+
+#[test_context(TeardownPanicContext, skip_teardown)]
 #[test]
 fn test_sync_skip_teardown(_ctx: &mut TeardownPanicContext) {}
 
@@ -193,6 +199,12 @@ fn test_sync_skip_teardown_with_immutable_ref(_ctx: &TeardownPanicContext) {}
 #[test_context(TeardownPanicContext, skip_teardown)]
 #[test]
 fn test_sync_skip_teardown_with_full_ownership(_ctx: TeardownPanicContext) {}
+
+#[test_context(TeardownPanicContext, skip_teardown)]
+#[test]
+fn test_sync_skip_teardown_with_full_mut_ownership(mut ctx: TeardownPanicContext) {
+    let _test = &mut ctx;
+}
 
 struct GenericContext<T> {
     contents: T,
