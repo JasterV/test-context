@@ -127,9 +127,8 @@ tests annotated with `#[tokio::test]` continue to work as usual without the feat
 
 ## Skipping the teardown execution
 
-Also, if you don't care about the
-teardown execution for a specific test, you can use the `skip_teardown` keyword on the macro
-like this:
+Also, if you don't care about the teardown execution for a specific test,
+you can use the `skip_teardown` keyword on the macro like this:
 
 ```rust
  use test_context::{test_context, TestContext};
@@ -144,10 +143,49 @@ like this:
 
 #[test_context(MyContext, skip_teardown)]
 #[test]
-fn test_without_teardown(ctx: &mut MyContext) {
+fn test_without_teardown(ctx: &MyContext) {}
+```
+
+## Taking ownership of the context vs taking a reference
+
+If the teardown is ON (default behavior), you can only take a reference to the context, either mutable or immutable, as follows:
+
+```rust
+#[test_context(MyContext)]
+#[test]
+fn test_with_teardown_using_immutable_ref(ctx: &MyContext) {}   
+
+#[test_context(MyContext)]
+#[test]
+fn test_with_teardown_using_mutable_ref(ctx: &mut MyContext) {}   
+```
+
+❌The following is invalid:
+
+```rust
+#[test_context(MyContext)]
+#[test]
+fn test_with_teardown_taking_ownership(ctx: MyContext) {}   
+```
+
+If the teardown is skipped (as specified in the section above), you can take an immutable ref, mutable ref or full ownership of the context:
+
+```rust
+#[test_context(MyContext, skip_teardown)]
+#[test]
+fn test_without_teardown(ctx: MyContext) {
   // Perform any operations that require full ownership of your context
 }
+
+#[test_context(MyContext, skip_teardown)]
+#[test]
+fn test_without_teardown_taking_a_ref(ctx: &MyContext) {}
+
+#[test_context(MyContext, skip_teardown)]
+#[test]
+fn test_without_teardown_taking_a_mut_ref(ctx: &mut MyContext) {}
 ```
+
 
 ## ⚠️ Ensure that the context type specified in the macro matches the test function argument type exactly
 
@@ -161,8 +199,8 @@ mod database {
 
     pub struct Connection;
 
-    impl TestContext for :Connection {
-    	fn setup() -> Self {Connection}
+    impl TestContext for Connection {
+    	fn setup() -> Self { Connection }
     	fn teardown(self) {...}
 	}
 }
