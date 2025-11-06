@@ -50,6 +50,18 @@ fn includes_return_value() {
     assert_eq!(return_value_func(), 1);
 }
 
+#[test_context(Context)]
+#[test]
+fn use_different_name(test_data: &mut Context) {
+    assert_eq!(test_data.n, 1);
+}
+
+#[test_context(Context)]
+#[test]
+fn use_immutable_ref(test_data: &Context) {
+    assert_eq!(test_data.n, 1);
+}
+
 struct ContextGeneric<T> {
     n: u32,
     _marker: PhantomData<T>,
@@ -140,12 +152,6 @@ fn async_auto_impls_sync(ctx: &mut AsyncContext) {
     assert_eq!(ctx.n, 1);
 }
 
-#[test_context(Context)]
-#[test]
-fn use_different_name(test_data: &mut Context) {
-    assert_eq!(test_data.n, 1);
-}
-
 #[test_context(AsyncContext)]
 #[tokio::test]
 async fn use_different_name_async(test_data: &mut AsyncContext) {
@@ -169,8 +175,24 @@ impl AsyncTestContext for TeardownPanicContext {
 async fn test_async_skip_teardown(_ctx: &mut TeardownPanicContext) {}
 
 #[test_context(TeardownPanicContext, skip_teardown)]
+#[tokio::test]
+async fn test_async_skip_teardown_with_immutable_ref(_ctx: &TeardownPanicContext) {}
+
+#[test_context(TeardownPanicContext, skip_teardown)]
+#[tokio::test]
+async fn test_async_skip_teardown_with_full_ownership(_ctx: TeardownPanicContext) {}
+
+#[test_context(TeardownPanicContext, skip_teardown)]
 #[test]
 fn test_sync_skip_teardown(_ctx: &mut TeardownPanicContext) {}
+
+#[test_context(TeardownPanicContext, skip_teardown)]
+#[test]
+fn test_sync_skip_teardown_with_immutable_ref(_ctx: &TeardownPanicContext) {}
+
+#[test_context(TeardownPanicContext, skip_teardown)]
+#[test]
+fn test_sync_skip_teardown_with_full_ownership(_ctx: TeardownPanicContext) {}
 
 struct GenericContext<T> {
     contents: T,

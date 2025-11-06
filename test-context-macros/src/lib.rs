@@ -1,9 +1,11 @@
-mod args;
+mod macro_args;
+mod test_args;
 
-use args::TestContextArgs;
+use crate::test_args::{ContextArg, ContextArgMode, TestArg};
+use macro_args::TestContextArgs;
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::Ident;
+use syn::ItemFn;
 
 /// Macro to use on tests to add the setup/teardown functionality of your context.
 ///
@@ -30,59 +32,108 @@ pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
     let args = syn::parse_macro_input!(attr as TestContextArgs);
     let input = syn::parse_macro_input!(item as syn::ItemFn);
 
-    let (input, context_arg_name) = remove_context_arg(input, args.context_type.clone());
-    let input = refactor_input_body(input, &args, context_arg_name);
+    let (input, context_args) = remove_context_args(input, args.context_type.clone());
+
+    if context_args.len() != 1 {
+        panic!("Exactly one Context argument must be defined");
+    }
+
+    let context_arg = context_args.into_iter().next().unwrap();
+
+    if !args.skip_teardown && context_arg.mode == ContextArgMode::Owned {
+        panic!(
+            "It is not possible to take ownership of the context if the teardown has to be ran."
+        );
+    }
+
+    let input = refactor_input_body(input, &args, context_arg);
 
     quote! { #input }.into()
 }
 
-fn refactor_input_body(
+fn remove_context_args(
     mut input: syn::ItemFn,
+    expected_context_type: syn::Type,
+) -> (syn::ItemFn, Vec<ContextArg>) {
+    let test_args: Vec<TestArg> = input
+        .sig
+        .inputs
+        .into_iter()
+        .map(|arg| TestArg::parse_arg_with_expected_context(arg, &expected_context_type))
+        .collect();
+
+    let context_args: Vec<ContextArg> = test_args
+        .iter()
+        .cloned()
+        .filter_map(|arg| match arg {
+            TestArg::Any(_) => None,
+            TestArg::Context(context_arg_info) => Some(context_arg_info),
+        })
+        .collect();
+
+    let new_args: syn::punctuated::Punctuated<_, _> = test_args
+        .into_iter()
+        .filter_map(|arg| match arg {
+            TestArg::Any(fn_arg) => Some(fn_arg),
+            TestArg::Context(_) => None,
+        })
+        .collect();
+
+    input.sig.inputs = new_args;
+
+    (input, context_args)
+}
+
+fn refactor_input_body(
+    input: syn::ItemFn,
     args: &TestContextArgs,
-    context_arg_name: Option<Ident>,
+    context_arg: ContextArg,
 ) -> syn::ItemFn {
     let context_type = &args.context_type;
-    let context_arg_name = context_arg_name.unwrap_or_else(|| format_ident!("test_ctx"));
     let result_name = format_ident!("wrapped_result");
     let body = &input.block;
     let is_async = input.sig.asyncness.is_some();
+    let context_arg_name = context_arg.name;
 
-    let body = match (is_async, args.skip_teardown) {
-        (true, true) => {
-            quote! {
-                use test_context::futures::FutureExt;
-                let mut __context = <#context_type as test_context::AsyncTestContext>::setup().await;
-                let #context_arg_name = &mut __context;
-                let #result_name = std::panic::AssertUnwindSafe( async { #body } ).catch_unwind().await;
-            }
+    let context_binding = match context_arg.mode {
+        ContextArgMode::Owned => quote! { let #context_arg_name = __context; },
+        ContextArgMode::Reference => quote! { let #context_arg_name = &__context; },
+        ContextArgMode::MutableReference => quote! { let #context_arg_name = &mut __context; },
+    };
+
+    let body = if args.skip_teardown && is_async {
+        quote! {
+            use test_context::futures::FutureExt;
+            let mut __context = <#context_type as test_context::AsyncTestContext>::setup().await;
+            #context_binding
+            let #result_name = std::panic::AssertUnwindSafe( async { #body } ).catch_unwind().await;
         }
-        (true, false) => {
-            quote! {
-                use test_context::futures::FutureExt;
-                let mut __context = <#context_type as test_context::AsyncTestContext>::setup().await;
-                let #context_arg_name = &mut __context;
-                let #result_name = std::panic::AssertUnwindSafe( async { #body } ).catch_unwind().await;
-                <#context_type as test_context::AsyncTestContext>::teardown(__context).await;
-            }
+    } else if args.skip_teardown && !is_async {
+        quote! {
+            let mut __context = <#context_type as test_context::TestContext>::setup();
+            let #result_name = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                #context_binding
+                #body
+            }));
         }
-        (false, true) => {
-            quote! {
-                let mut __context = <#context_type as test_context::TestContext>::setup();
-                let #result_name = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                    let #context_arg_name = &mut __context;
-                    #body
-                }));
-            }
+    } else if !args.skip_teardown && is_async {
+        quote! {
+            use test_context::futures::FutureExt;
+            let mut __context = <#context_type as test_context::AsyncTestContext>::setup().await;
+            #context_binding
+            let #result_name = std::panic::AssertUnwindSafe( async { #body } ).catch_unwind().await;
+            <#context_type as test_context::AsyncTestContext>::teardown(__context).await;
         }
-        (false, false) => {
-            quote! {
-                let mut __context = <#context_type as test_context::TestContext>::setup();
-                let #result_name = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                    let #context_arg_name = &mut __context;
-                    #body
-                }));
-                <#context_type as test_context::TestContext>::teardown(__context);
-            }
+    }
+    // !args.skip_teardown && !is_async
+    else {
+        quote! {
+            let mut __context = <#context_type as test_context::TestContext>::setup();
+            let #result_name = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                #context_binding
+                #body
+            }));
+            <#context_type as test_context::TestContext>::teardown(__context);
         }
     };
 
@@ -98,46 +149,8 @@ fn refactor_input_body(
         }
     };
 
-    input.block = Box::new(syn::parse2(body).unwrap());
-
-    input
-}
-
-fn remove_context_arg(
-    mut input: syn::ItemFn,
-    expected_context_type: syn::Type,
-) -> (syn::ItemFn, Option<syn::Ident>) {
-    let mut context_arg_name = None;
-    let mut new_args = syn::punctuated::Punctuated::new();
-
-    for arg in &input.sig.inputs {
-        // Extract function arg:
-        if let syn::FnArg::Typed(pat_type) = arg {
-            // Extract arg identifier:
-            if let syn::Pat::Ident(pat_ident) = &*pat_type.pat {
-                // Check that context arg is only ref or mutable ref:
-                if let syn::Type::Reference(type_ref) = &*pat_type.ty {
-                    // Check that context has expected type:
-                    if types_equal(&type_ref.elem, &expected_context_type) {
-                        context_arg_name = Some(pat_ident.ident.clone());
-                        continue;
-                    }
-                }
-            }
-        }
-
-        new_args.push(arg.clone());
+    ItemFn {
+        block: Box::new(syn::parse2(body).unwrap()),
+        ..input
     }
-
-    input.sig.inputs = new_args;
-
-    (input, context_arg_name)
-}
-
-fn types_equal(a: &syn::Type, b: &syn::Type) -> bool {
-    if let (syn::Type::Path(a_path), syn::Type::Path(b_path)) = (a, b) {
-        return a_path.path.segments.last().unwrap().ident
-            == b_path.path.segments.last().unwrap().ident;
-    }
-    quote!(#a).to_string() == quote!(#b).to_string()
 }
