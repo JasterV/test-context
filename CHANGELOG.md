@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3](https://github.com/JasterV/test-context/compare/v0.5.2...v0.5.3) - 2025-11-06
+
+### Fixed
+
+- mut ownership doesn't work ([#60](https://github.com/JasterV/test-context/pull/60))
+
 ## [0.5.2](https://github.com/JasterV/test-context/compare/v0.5.1...v0.5.2) - 2025-11-06
 
 ### Added

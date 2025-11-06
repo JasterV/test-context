@@ -13,7 +13,7 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-test-context-macros = { version = "0.5.2", path = "../test-context-macros/" }
+test-context-macros = { version = "0.5.3", path = "../test-context-macros/" }
 futures = "0.3"
 
 [dev-dependencies]
