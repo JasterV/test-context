@@ -40,45 +40,49 @@ pub enum TestArg {
 
 impl TestArg {
     pub fn parse_arg_with_expected_context(arg: FnArg, expected_context_type: &syn::Type) -> Self {
-        // Check if the argument is the context argument
-        if let syn::FnArg::Typed(pat_type) = &arg
-            && let syn::Pat::Ident(pat_ident) = &*pat_type.pat
+        let syn::FnArg::Typed(pat_type) = &arg else {
+            return Self::Any(arg);
+        };
+
+        let syn::Pat::Ident(pat_ident) = &*pat_type.pat else {
+            return Self::Any(arg);
+        };
+
+        let arg_type = &*pat_type.ty;
+
+        // Check for mutable/immutable reference
+        if let syn::Type::Reference(type_ref) = arg_type
+            && types_equal(&type_ref.elem, expected_context_type)
         {
-            let arg_type = &*pat_type.ty;
-            // Check for mutable/immutable reference
-            if let syn::Type::Reference(type_ref) = arg_type
-                && types_equal(&type_ref.elem, expected_context_type)
-            {
-                let mode = if type_ref.mutability.is_some() {
-                    ContextArgMode::MutableReference
-                } else {
-                    ContextArgMode::Reference
-                };
-
-                TestArg::Context(ContextArg {
-                    name: pat_ident.ident.clone(),
-                    mode,
-                })
-            } else if types_equal(arg_type, expected_context_type) {
-                // To determine mutability for an owned type, we check the identifier pattern.
-                let mode = if pat_ident.mutability.is_some() {
-                    // This catches signatures like: `mut my_ctx: ContextType`
-                    ContextArgMode::OwnedMut
-                } else {
-                    // This catches signatures like: `my_ctx: ContextType`
-                    ContextArgMode::Owned
-                };
-
-                TestArg::Context(ContextArg {
-                    name: pat_ident.ident.clone(),
-                    mode,
-                })
+            let mode = if type_ref.mutability.is_some() {
+                ContextArgMode::MutableReference
             } else {
-                TestArg::Any(arg)
-            }
-        } else {
-            TestArg::Any(arg)
+                ContextArgMode::Reference
+            };
+
+            return TestArg::Context(ContextArg {
+                name: pat_ident.ident.clone(),
+                mode,
+            });
         }
+
+        if !types_equal(arg_type, expected_context_type) {
+            return TestArg::Any(arg);
+        }
+
+        // To determine mutability for an owned type, we check the identifier pattern.
+        let mode = if pat_ident.mutability.is_some() {
+            // This catches signatures like: `mut my_ctx: ContextType`
+            ContextArgMode::OwnedMut
+        } else {
+            // This catches signatures like: `my_ctx: ContextType`
+            ContextArgMode::Owned
+        };
+
+        TestArg::Context(ContextArg {
+            name: pat_ident.ident.clone(),
+            mode,
+        })
     }
 }
 
