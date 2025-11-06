@@ -13,10 +13,23 @@ pub struct ContextArg {
 pub enum ContextArgMode {
     /// The argument was passed as an owned value (`ContextType`). Only valid with `skip_teardown`.
     Owned,
+    /// The argument was passed as an owned value (mut `ContextType`). Only valid with `skip_teardown`.
+    OwnedMut,
     /// The argument was passed as an immutable reference (`&ContextType`).
     Reference,
     /// The argument was passed as a mutable reference (`&mut ContextType`).
     MutableReference,
+}
+
+impl ContextArgMode {
+    pub fn is_owned(&self) -> bool {
+        match self {
+            ContextArgMode::Owned => true,
+            ContextArgMode::OwnedMut => true,
+            ContextArgMode::Reference => false,
+            ContextArgMode::MutableReference => false,
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -47,9 +60,18 @@ impl TestArg {
                     mode,
                 })
             } else if types_equal(arg_type, expected_context_type) {
+                // To determine mutability for an owned type, we check the identifier pattern.
+                let mode = if pat_ident.mutability.is_some() {
+                    // This catches signatures like: `mut my_ctx: ContextType`
+                    ContextArgMode::OwnedMut
+                } else {
+                    // This catches signatures like: `my_ctx: ContextType`
+                    ContextArgMode::Owned
+                };
+
                 TestArg::Context(ContextArg {
                     name: pat_ident.ident.clone(),
-                    mode: ContextArgMode::Owned,
+                    mode,
                 })
             } else {
                 TestArg::Any(arg)
