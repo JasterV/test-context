@@ -56,4 +56,3 @@ jobs:
         with:
           command: clippy
           args: --all-targets -- -D warnings
-

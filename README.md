@@ -7,7 +7,7 @@
 
 A library for providing custom setup/teardown for Rust tests without needing a test harness.
 
-```rust
+```rust ignore
 use test_context::{test_context, TestContext};
 
 struct MyContext {
@@ -77,7 +77,7 @@ The `AsyncTestContext` works well with async test wrappers like
 [`actix_rt::test`](https://docs.rs/actix-rt/1.1.1/actix_rt/attr.test.html) or
 [`tokio::test`](https://docs.rs/tokio/1.0.2/tokio/attr.test.html).
 
-```rust
+```rust ignore
 #[test_context(MyAsyncContext)]
 #[tokio::test]
 async fn test_works(ctx: &mut MyAsyncContext) {
@@ -95,7 +95,7 @@ that runs setup/teardown.
 
 Valid:
 
-```rust
+```rust ignore
 #[test_context(MyAsyncContext)]
 #[tokio::test]
 async fn my_test(ctx: &mut MyAsyncContext) {}
@@ -103,7 +103,7 @@ async fn my_test(ctx: &mut MyAsyncContext) {}
 
 Invalid:
 
-```rust
+```rust ignore
 #[tokio::test]
 #[test_context(MyAsyncContext)]
 async fn my_test(ctx: &mut MyAsyncContext) {}
@@ -130,7 +130,7 @@ tests annotated with `#[tokio::test]` continue to work as usual without the feat
 Also, if you don't care about the teardown execution for a specific test,
 you can use the `skip_teardown` keyword on the macro like this:
 
-```rust
+```rust ignore
  use test_context::{test_context, TestContext};
 
  struct MyContext {}
@@ -150,7 +150,7 @@ fn test_without_teardown(ctx: &MyContext) {}
 
 If the teardown is ON (default behavior), you can only take a reference to the context, either mutable or immutable, as follows:
 
-```rust
+```rust ignore
 #[test_context(MyContext)]
 #[test]
 fn test_with_teardown_using_immutable_ref(ctx: &MyContext) {}   
@@ -162,7 +162,7 @@ fn test_with_teardown_using_mutable_ref(ctx: &mut MyContext) {}
 
 ❌The following is invalid:
 
-```rust
+```rust ignore
 #[test_context(MyContext)]
 #[test]
 fn test_with_teardown_taking_ownership(ctx: MyContext) {}   
@@ -170,7 +170,7 @@ fn test_with_teardown_taking_ownership(ctx: MyContext) {}
 
 If the teardown is skipped (as specified in the section above), you can take an immutable ref, mutable ref or full ownership of the context:
 
-```rust
+```rust ignore
 #[test_context(MyContext, skip_teardown)]
 #[test]
 fn test_without_teardown(ctx: MyContext) {
@@ -186,14 +186,13 @@ fn test_without_teardown_taking_a_ref(ctx: &MyContext) {}
 fn test_without_teardown_taking_a_mut_ref(ctx: &mut MyContext) {}
 ```
 
-
 ## ⚠️ Ensure that the context type specified in the macro matches the test function argument type exactly
 
 The error occurs when a context type with an absolute path is mixed with an it's alias.
 
 For example:
 
-```
+```rust ignore
 mod database {
     use test_context::TestContext;
 
@@ -207,7 +206,8 @@ mod database {
 ```
 
 ✅The following code will work:
-```
+
+```rust ignore
 use database::Connection as DbConn;
 
 #[test_context(DbConn)]
@@ -228,7 +228,8 @@ fn test1(ctx: &mut database::Connection) {
 ```
 
 ❌The following code will not work:
-```
+
+```rust ignore
 use database::Connection as DbConn;
 
 #[test_context(database::Connection)]
