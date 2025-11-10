@@ -1,11 +1,15 @@
 use syn::{Token, Type, parse::Parse};
 
-pub(crate) struct TestContextArgs {
+/// Contains the parsed arguments passed to the macro `#[test_context(..)]`
+pub(crate) struct MacroArgs {
+    /// The context type passed in the macro arguments.
+    /// It must implement `TestContext` or `AsyncTestContext`
     pub(crate) context_type: Type,
+
     pub(crate) skip_teardown: bool,
 }
 
-impl Parse for TestContextArgs {
+impl Parse for MacroArgs {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let mut skip_teardown = false;
         let mut context_type: Option<Type> = None;
@@ -28,7 +32,7 @@ impl Parse for TestContextArgs {
             }
         }
 
-        Ok(TestContextArgs {
+        Ok(MacroArgs {
             context_type: context_type
                 .ok_or(input.error("expected at least one type identifier"))?,
             skip_teardown,
