@@ -2,7 +2,7 @@ mod macro_args;
 mod test_args;
 
 use crate::test_args::{ContextArg, ContextArgMode, TestArg};
-use macro_args::TestContextArgs;
+use macro_args::MacroArgs;
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::ItemFn;
@@ -29,7 +29,7 @@ use syn::ItemFn;
 /// ```
 #[proc_macro_attribute]
 pub fn test_context(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let args = syn::parse_macro_input!(attr as TestContextArgs);
+    let args = syn::parse_macro_input!(attr as MacroArgs);
     let input = syn::parse_macro_input!(item as syn::ItemFn);
 
     let (input, context_args) = remove_context_args(input, args.context_type.clone());
@@ -86,7 +86,7 @@ fn remove_context_args(
 
 fn refactor_input_body(
     input: syn::ItemFn,
-    args: &TestContextArgs,
+    args: &MacroArgs,
     context_arg: ContextArg,
 ) -> syn::ItemFn {
     let context_type = &args.context_type;
