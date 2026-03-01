@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5](https://github.com/JasterV/test-context/compare/v0.5.4...v0.5.5) - 2026-03-01
+
+### Other
+
+- *(deps)* bump rust-toolchain from 1.91 to 1.93 ([#69](https://github.com/JasterV/test-context/pull/69))
+
 ## [0.5.4](https://github.com/JasterV/test-context/compare/v0.5.3...v0.5.4) - 2025-11-10
 
 ### Other
