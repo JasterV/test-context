@@ -130,6 +130,7 @@ async fn test_async_teardown(ctx: &mut AsyncContext) {
 
 #[test_context(AsyncContext)]
 #[tokio::test]
+#[allow(unused_assignments)]
 #[should_panic(expected = "Number changed")]
 async fn test_async_panicking_teardown(ctx: &mut AsyncContext) {
     ctx.n = 2;
