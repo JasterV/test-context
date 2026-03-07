@@ -1,7 +1,16 @@
+# ⚠️ This repo has been migrated ⚠️
+
+Mainly for philosofic reasons I've decided to migrate all my projects to a free software alternative forge ([Codeberg](https://codeberg.org/)).
+
+You can find the most recent version of this repository [here](https://codeberg.org/JasterV/test-context).
+
+I encourage any free software activist to follow the same steps, as it doesn't make sense to make use of a propietary software to host our projects if we advocate for free software.
+
+---
+
 [![crates.io](https://img.shields.io/crates/v/test-context?label=latest)](https://crates.io/crates/test-context)
 [![Documentation](https://docs.rs/test-context/badge.svg)](https://docs.rs/test-context)
 ![License](https://img.shields.io/crates/l/test-context.svg)
-[![Github](https://github.com/markhildreth/test-context/workflows/Rust/badge.svg?branch=main)](https://github.com/markhildreth/test-context/actions)
 
 # test-context
 
